@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>GTB · Gestion de Bibliothèque</title>
+    
+    <!-- Meta description & SEO -->
+    <meta name="description" content="GTB – Gestion de Bibliothèque. Gérez vos livres, adhérents, emprunts et retours avec une carte numérique et une détection automatique des vols. Application Java / JavaFX avec base Oracle distante.">
+    <meta name="keywords" content="gestion de bibliothèque, GTB, JavaFX, Oracle SQL, carte d'adhérent, détection de vol, emprunts, bibliothèque">
+    <meta name="author" content="MEGHARBA SAMOU">
+    
+    <!-- Favicon (icône livre ouvert) -->
+    <link rel="icon" type="image/svg+xml" href="GTB.ico">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #e5e7eb;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+            background: linear-gradient(-45deg, #0a0c0f, #0a192f, #0f172a, #1e1a3a);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Effet de grille subtile en arrière‑plan */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .header {
+            background: rgba(10, 12, 15, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .logo:hover {
+            transform: scale(1.02);
+        }
+
+        .logo i {
+            color: #8b5cf6;
+            font-size: 2rem;
+            filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
+        }
+
+        .nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #9ca3af;
+            font-weight: 500;
+            transition: color 0.2s;
+            position: relative;
+            padding-bottom: 0.25rem;
+        }
+
+        .nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+            transition: width 0.3s;
+        }
+
+        .nav a:hover::after,
+        .nav a.active::after {
+            width: 100%;
+        }
+
+        .nav a:hover,
+        .nav a.active {
+            color: #fff;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+            background: linear-gradient(135deg, #9b6cff, #8b4eff);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .btn-outline:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: #a78bfa;
+            color: #a78bfa;
+            transform: translateY(-3px);
+        }
+
+        .hero {
+            padding: 80px 0 60px;
+        }
+
+        .hero .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            background: linear-gradient(to right, #fff, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero .subtitle {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            margin: 1rem 0;
+            animation: fadeInUp 1s ease 0.1s both;
+        }
+
+        .hero p {
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+
+        .hero-image {
+            background: rgba(21, 26, 36, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 30px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .hero-image:hover {
+            transform: translateY(-10px);
+            border-color: #8b5cf6;
+        }
+
+        .hero-image i {
+            font-size: 180px;
+            color: #8b5cf6;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5));
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        section {
+            padding: 70px 0;
+            position: relative;
+        }
+
+        section:nth-child(even) {
+            background: rgba(11, 15, 21, 0.7);
+            backdrop-filter: blur(2px);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title span {
+            color: #8b5cf6;
+            border-bottom: 3px solid #8b5cf6;
+            padding-bottom: 6px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .card {
+            background: rgba(21, 26, 36, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 1.8rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: #8b5cf6;
+            background: rgba(21, 26, 36, 0.95);
+            box-shadow: 0 20px 30px -10px rgba(139, 92, 246, 0.3);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: #8b5cf6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+
+        .use-case {
+            background: rgba(21, 26, 36, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .use-case:hover {
+            border-color: #8b5cf6;
+            transform: translateX(8px);
+        }
+
+        .use-case h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .use-case .actor {
+            color: #64ffda;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tech-item {
+            background: rgba(21, 26, 36, 0.9);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            color: #e5e7eb;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .tech-item:hover {
+            border-color: #8b5cf6;
+            background: #8b5cf620;
+            transform: scale(1.05);
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0 1rem;
+        }
+
+        .contact-section {
+            padding: 60px 20px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .contact-info, .contact-form {
+            background: rgba(21, 26, 36, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 28px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .contact-info:hover, .contact-form:hover {
+            border-color: #8b5cf6;
+            transform: translateY(-5px);
+        }
+
+        .contact-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .contact-detail i {
+            width: 40px;
+            height: 40px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b5cf6;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .contact-detail a {
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: color 0.2s;
+            word-break: break-word;
+        }
+
+        .contact-detail a:hover {
+            color: #8b5cf6;
+        }
+
+        .contact-detail:hover i {
+            background: #8b5cf6;
+            color: #0a0c0f;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 14px;
+            color: #e5e7eb;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            font-weight: 700;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .footer {
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 2rem 0;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .footer .social-links {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .footer .social-links a {
+            color: #9ca3af;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .footer .social-links a:hover {
+            color: #8b5cf6;
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 768px) {
+            .hero .container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-buttons {
+                justify-content: center;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .nav {
+                display: none;
+            }
+            .nav.active {
+                display: block;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: rgba(10, 12, 15, 0.98);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid #1f2a3f;
+                padding: 1rem;
+            }
+            .nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .contact-info, .contact-form {
+                padding: 1.5rem;
+            }
+            .contact-detail {
+                gap: 0.8rem;
+            }
+            .contact-detail i {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="#" class="logo">
+                <i class="fas fa-book"></i>
+                <span>GTB</span>
+            </a>
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <nav class="nav" id="nav">
+                <ul>
+                    <li><a href="#accueil" class="active">Accueil</a></li>
+                    <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+                    <li><a href="#besoins">Besoins fonctionnels</a></li>
+                    <li><a href="#cas">Cas d'utilisation</a></li>
+                    <li><a href="#technologies">Technologies</a></li>
+                    <li><a href="#download">Télécharger</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="accueil" class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>GTB</h1>
+                    <p class="subtitle">Système de Gestion de Bibliothèque</p>
+                    <p>Application Java complète pour la gestion des documents, adhérents et emprunts. Chaque adhérent possède sa propre carte numérique, et un système de détection de vol déclenche automatiquement des alertes et pénalités.</p>
+                    <div class="hero-buttons">
+                        <a href="#download" class="btn btn-primary"><i class="fas fa-download"></i> Télécharger</a>
+                        <a href="https://github.com/SAMOU2/GTB" target="_blank" class="btn btn-outline"><i class="fab fa-github"></i> GitHub</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+            </div>
+        </section>
+
+        <section id="fonctionnalites">
+            <div class="container">
+                <h2 class="section-title"><span>Fonctionnalités</span> clés</h2>
+                <div class="cards-grid">
+                    <div class="card"><h3><i class="fas fa-id-card"></i> Carte d'adhérent personnelle</h3><p>Chaque adhérent se voit attribuer une carte numérique unique (QR code / code-barre) facilitant l'identification et l'emprunt.</p></div>
+                    <div class="card"><h3><i class="fas fa-shield-alt"></i> Détection de vol</h3><p>Procédure automatisée déclenchée en cas de non‑retour d’un livre après la date limite ou en cas de déclaration de vol. Alerte, blocage du compte et pénalité financière.</p></div>
+                    <div class="card"><h3><i class="fas fa-book"></i> Gestion des documents</h3><p>Ajouter, modifier, supprimer des livres et journaux. Consulter le catalogue, rechercher par titre/identifiant.</p></div>
+                    <div class="card"><h3><i class="fas fa-users"></i> Gestion des adhérents</h3><p>Inscription, modification, consultation. Génération d'un identifiant unique et d'une carte.</p></div>
+                    <div class="card"><h3><i class="fas fa-exchange-alt"></i> Emprunts / retours</h3><p>Enregistrement des emprunts, gestion des retards, pénalités, historique.</p></div>
+                    <div class="card"><h3><i class="fas fa-cloud"></i> Base distante</h3><p>Oracle SQL hébergé sur Aiven, accessible depuis n'importe où.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="besoins">
+            <div class="container">
+                <h2 class="section-title"><span>Besoins</span> fonctionnels</h2>
+                <div class="cards-grid">
+                    <div class="card"><h3>Gestion des documents</h3><p><strong>BF1</strong> : Ajouter, modifier, supprimer un document (livre ou journal).<br><strong>BF2</strong> : Consulter le catalogue des documents.<br><strong>BF3</strong> : Rechercher un document par titre / identifiant.</p></div>
+                    <div class="card"><h3>Gestion des adhérents</h3><p><strong>BF4</strong> : Inscrire un nouvel adhérent.<br><strong>BF5</strong> : Modifier les informations d'un adhérent.<br><strong>BF6</strong> : Consulter la liste des adhérents.<br><strong>BF13</strong> : Générer une carte numérique unique pour chaque adhérent.</p></div>
+                    <div class="card"><h3>Emprunts et retours</h3><p><strong>BF7</strong> : Enregistrer un emprunt de livre.<br><strong>BF8</strong> : Enregistrer un retour de livre.<br><strong>BF9</strong> : Consulter les emprunts en cours.<br><strong>BF10</strong> : Consulter l'historique des emprunts d'un adhérent.</p></div>
+                    <div class="card"><h3>Contrôles et procédures</h3><p><strong>BF11</strong> : Vérifier qu'un adhérent peut emprunter (déjà inscrit et actif).<br><strong>BF12</strong> : Vérifier la disponibilité d'un livre avant emprunt.<br><strong>BF14</strong> : Déclencher une procédure automatique en cas de vol (livre non restitué après la date limite ou signalé volé) : alerte, blocage du compte, pénalité.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cas" style="background: rgba(11, 15, 21, 0.7);">
+            <div class="container">
+                <h2 class="section-title"><span>Cas d'utilisation</span> (UC)</h2>
+                <div class="use-case">
+                    <h4>UC1 : Gérer les documents</h4>
+                    <div class="actor">Acteur : Bibliothécaire</div>
+                    <div class="description">Ajouter, modifier, supprimer des documents (livres/journaux). Le système valide les saisies et met à jour le catalogue.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC2 : Gérer les adhérents</h4>
+                    <div class="actor">Acteur : Bibliothécaire</div>
+                    <div class="description">Inscrire, modifier, désactiver des adhérents. Génération automatique d'un identifiant unique et d'une carte numérique (QR code).</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC3 : Emprunter un livre</h4>
+                    <div class="actor">Acteur : Bibliothécaire</div>
+                    <div class="description">Enregistrement d'un emprunt après vérification de l'éligibilité de l'adhérent et de la disponibilité du livre. Mise à jour du statut du document.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC4 : Retourner un livre</h4>
+                    <div class="actor">Acteur : Bibliothécaire</div>
+                    <div class="description">Enregistrement du retour, calcul du retard éventuel. Si le livre n'est pas restitué dans le délai imparti, le système peut déclencher la procédure de vol (UC10).</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC5 : Consulter le catalogue</h4>
+                    <div class="actor">Adhérent, Bibliothécaire</div>
+                    <div class="description">Afficher la liste des documents avec filtrage par type (livre/journal) et disponibilité.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC6 : Rechercher un document</h4>
+                    <div class="actor">Adhérent, Bibliothécaire</div>
+                    <div class="description">Recherche par titre, auteur, identifiant, etc. Affichage des résultats.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC7 : S'inscrire</h4>
+                    <div class="actor">Adhérent</div>
+                    <div class="description">Demande d'inscription en ligne. Le bibliothécaire valide l'inscription, le système génère la carte numérique.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC8 : Consulter ses emprunts</h4>
+                    <div class="actor">Adhérent</div>
+                    <div class="description">Visualisation des emprunts en cours et de l'historique, avec dates de retour prévues et effectives.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC9 : Authentifier</h4>
+                    <div class="actor">Administrateur, Bibliothécaire, Adhérent</div>
+                    <div class="description">Connexion avec identifiants. Redirection vers l'interface correspondant au rôle.</div>
+                </div>
+                <div class="use-case">
+                    <h4>UC10 : Gérer un vol</h4>
+                    <div class="actor">Bibliothécaire, Administrateur</div>
+                    <div class="description">Procédure déclenchée automatiquement (retard excessif) ou manuellement. Le système bloque le compte de l'adhérent, enregistre une pénalité et génère une alerte.</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="technologies">
+            <div class="container">
+                <h2 class="section-title"><span>Technologies</span> utilisées</h2>
+                <div class="tech-list">
+                    <span class="tech-item"><i class="fab fa-java"></i> Java (BellSoft JDK 25)</span>
+                    <span class="tech-item"><i class="fas fa-desktop"></i> JavaFX</span>
+                    <span class="tech-item"><i class="fas fa-database"></i> Oracle SQL</span>
+                    <span class="tech-item"><i class="fas fa-cloud"></i> Aiven (hébergement cloud)</span>
+                    <span class="tech-item"><i class="fas fa-code"></i> IntelliJ IDEA Ultimate</span>
+                    <span class="tech-item"><i class="fas fa-project-diagram"></i> Architecture MVC</span>
+                    <span class="tech-item"><i class="fab fa-git-alt"></i> Git & GitHub</span>
+                </div>
+                <p style="text-align:center; margin-top:2rem; color:#9ca3af;">Base de données Oracle hébergée sur <strong>Aiven</strong> pour une disponibilité distante sécurisée. L'interface graphique est développée avec <strong>JavaFX</strong>.</p>
+            </div>
+        </section>
+
+        <section id="download" style="background: rgba(11, 15, 21, 0.7);">
+            <div class="container">
+                <h2 class="section-title"><span>Télécharger</span> l'application</h2>
+                <p style="text-align:center; margin-bottom:1rem;">Version 1.0 – Mars 2026</p>
+                <div class="download-buttons">
+                    <a href="https://github.com/SAMOU2/GTB/blob/main/GTB.exe?raw=true" class="btn btn-primary" download><i class="fab fa-windows"></i> Windows (.exe)</a>
+                    <a href="https://github.com/SAMOU2/GTB" target="_blank" class="btn btn-outline"><i class="fab fa-github"></i> Code source (GitHub)</a>
+                </div>
+                <p class="download-info" style="text-align:center; color:#6b7280; margin-top:1rem;">L'exécutable est également disponible dans le dépôt GitHub. Pour utiliser la base distante, contactez l'administrateur pour les identifiants de connexion.</p>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <div class="container">
+                <h2 class="section-title">Contactez-<span>nous</span></h2>
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h3>Restons en contact</h3>
+                        <div class="contact-detail">
+                            <i class="fas fa-envelope"></i>
+                            <a href="mailto:samoumegharba210@gmail.com">samoumegharba210@gmail.com</a>
+                        </div>
+                        <div class="contact-detail">
+                            <i class="fab fa-github"></i>
+                            <a href="https://github.com/samou2" target="_blank">github.com/samou2</a>
+                        </div>
+                        <div class="contact-detail">
+                            <i class="fab fa-linkedin"></i>
+                            <a href="https://linkedin.com/in/samou-megharba" target="_blank">linkedin.com/in/samou-megharba</a>
+                        </div>
+                        <p style="margin-top: 2rem; color: #9ca3af;">Ou écrivez-nous directement via le formulaire.</p>
+                    </div>
+                    <form class="contact-form" action="https://formspree.io/f/mbdzwadz" method="POST">
+                        <div class="form-group">
+                            <label>Nom</label>
+                            <input type="text" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="_replyto" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea name="message" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">Envoyer</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 GTB - Système de Gestion de Bibliothèque | Développé par MEGHARBA SAMOU</p>
+            <div class="social-links">
+                <a href="https://github.com/SAMOU2" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://linkedin.com/in/samou-megharba" target="_blank"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const nav = document.getElementById('nav');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                nav.classList.toggle('active');
+            });
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    if (nav) nav.classList.remove('active');
+                }
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            let scrollY = window.pageYOffset;
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionId = section.getAttribute('id');
+                const navLink = document.querySelector(`.nav a[href="#${sectionId}"]`);
+                if (scrollY >= sectionTop && scrollY < sectionTop + section.offsetHeight) {
+                    document.querySelectorAll('.nav a').forEach(link => link.classList.remove('active'));
+                    if (navLink) navLink.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
